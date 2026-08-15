@@ -1,21 +1,23 @@
 #!/bin/sh
 
+LOG="/mnt/mmc/MUOS/application/autobt_log.txt"
 TARGET_DEVICE="Device 74:DE:8D:38:BD:C1 TX612"
-MAX_RETRIES=5
+MAX_RETRIES=10
 RETRY_DELAY=3
 SINK_TIMEOUT=15
 
 count=1
 
-echo "Starting autobt" > /mnt/mmc/MUOS/init/autobt_log.txt
+echo "Starting autobt" >> "$LOG"
+sleep 10
 
 while [ "$count" -le "$MAX_RETRIES" ]; do
-    echo "Checking Bluetooth connection (attempt $count/$MAX_RETRIES)..."
+    echo "Checking Bluetooth connection (attempt $count/$MAX_RETRIES)..." >> "$LOG"
 
     CONNECTED=$(bluetoothctl devices Connected)
 
     if [ "$CONNECTED" = "$TARGET_DEVICE" ]; then
-        echo "TX612 connected."
+        echo "TX612 connected." >> "$LOG"
 
         # Wait for PipeWire to detect the TX612 sink
         timeout=0
@@ -24,7 +26,7 @@ while [ "$count" -le "$MAX_RETRIES" ]; do
             timeout=$((timeout + 1))
 
             if [ "$timeout" -ge "$SINK_TIMEOUT" ]; then
-                echo "Timed out waiting for TX612 sink."
+                echo "Timed out waiting for TX612 sink." >> "$LOG"
                 exit 1
             fi
         done
@@ -32,17 +34,17 @@ while [ "$count" -le "$MAX_RETRIES" ]; do
         SINK_LINE=$(wpctl status | grep "TX612" | grep "vol")
 
         if [ -n "$SINK_LINE" ]; then
-            ID=$(echo "$SINK_LINE" | awk '{gsub(/\./,"",$1); print $1}')
+            ID=$(echo "$SINK_LINE" | sed -n 's/.*[[:space:]]\([0-9][0-9]*\)\. TX612.*/\1/p')
 
-            echo "Found sink ID: $ID"
+            echo "Found sink ID: $ID" >> "$LOG"
 
             wpctl set-default "$ID"
 
-            echo "Default sink set."
+            echo "Default sink set." >> "$LOG"
 
             exit 0
         else
-            echo "TX612 sink not found in PipeWire."
+            echo "TX612 sink not found in PipeWire." >> "$LOG"
             exit 1
         fi
     fi
@@ -51,5 +53,5 @@ while [ "$count" -le "$MAX_RETRIES" ]; do
     count=$((count + 1))
 done
 
-echo "TX612 never connected."
+echo "TX612 never connected." >> "$LOG"
 exit 1
