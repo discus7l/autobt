@@ -8,6 +8,9 @@ SINK_TIMEOUT=3
 
 count=1
 
+quickCheck()
+    echo ''
+
 rm -f "$FLAG"
 
 echo "[$(date)] Starting autobt" >> "$LOG"
