@@ -5,11 +5,19 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(filename='autobt.log', encoding='utf-8', level=logging.ERROR)
 
 def quick_check():
-    # Look for paired devices using bluetoothctl
+    # Look for paired devices using bluetoothctl, terminate if none are found
+    quick_check_result = subprocess.run(["bluetoothctl", "devices", "Paired"], stdout=subprocess.PIPE)
+
+    if quick_check_result.stdout.decode().strip() == '':
+        print("No paired devices found.")
+        logging.error("No paired devices found.")
+        exit(1)
+    
     # Look for connected devices using bluetoothctl
+    # subprocess.run(["bluetoothctl", "devices", "Connected"], check=True)
     # Get device name and MAC address
     # Check wireplumb status
-    pass
+    return 0
 
 # Attempt to connect to paired device using bluetoothctl
 def connect_bt(mac_address):
@@ -31,6 +39,12 @@ def set_wireplumb(device_name):
 
 mac_address = "41:42:FF:57:F9:CF" #Erazer
 device_name = "Erazer" # Replace with actual device name
+
+# Check device status
+result = quick_check()
+if result == 0:
+    print("Device is already connected and wireplumb is set.")
+    exit(0)
 
 result = connect_bt(mac_address)
 print(f'Result: {result}')
