@@ -1,4 +1,5 @@
 from asyncio import sleep
+import re
 import subprocess
 import logging
 
@@ -79,45 +80,60 @@ def connect_bt(mac_address):
 # Get wireplumb ID of connected device
 def get_wireplumb_id(device_name):
     shell_command = [f'wpctl status | grep "{device_name}" | grep "vol"']
-    wireplumb_output = subprocess.check_output(shell_command, shell=True).decode()
+    try:
+        wireplumb_output = subprocess.check_output(shell_command, shell=True).decode()
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error getting wireplumb ID for {device_name}: {e.output.decode()}")
+        return "Fail"
     print(f"Wireplumb output: \n{wireplumb_output}")
+    match = re.search(r'(\d+)', wireplumb_output)
+    id = match.group(1)
+    return id
 
 # Set wireplumb
-def set_wireplumb(device_name):
+def set_wireplumb(id):
     try:
-        subprocess.check_output(["wireplumb", device_name])
+        subprocess.check_output(["wpctl", "set-default", id])
     except subprocess.CalledProcessError as e:
         logging.error(f"Error setting wireplumb: {e.output.decode()}")
         return "Fail"
     return "Success"
 
-get_wireplumb_id("ERAZER  XT60PRO")
+
 # --------------------------------------------------------------------#
-# # Check device status, connect if necessary, and set wireplumb
-# quick_check_result = quick_check()
-# if quick_check_result[0] == 0:
-#     print("Device is already connected and wireplumb is set.")
-#     exit(0)
-# elif quick_check_result[0] == "No connection":
-#     print("Device is paired but not connected, attempting to connect.")
-#     while bt_connect_max_retries > 0:
-#         connect_result = connect_bt(quick_check_result[1][0]['mac_address'])  # Connect to the first paired device
-#         if connect_result == "Success":
-#             break
-#         sleep(2)
-#         bt_connect_max_retries -= 1
+# Check device status, connect if necessary, and set wireplumb
+quick_check_result = quick_check()
+if quick_check_result[0] == 0:
+    print("Device is already connected and wireplumb is set.")
+    exit(0)
+elif quick_check_result[0] == "No connection":
+    print("Device is paired but not connected, attempting to connect.")
+    while bt_connect_max_retries > 0:
+        connect_result = connect_bt(quick_check_result[1][0]['mac_address'])  # Connect to the first paired device
+        if connect_result == "Success":
+            break
+        sleep(2)
+        bt_connect_max_retries -= 1
 
-# if connect_result == "Success":
-#     print("Device connected successfully.")
-#     wireplumb_result = set_wireplumb(quick_check_result[1][0]['device_name'])  # Set wireplumb for the first paired device
-#     if wireplumb_result == "Success":
-#         print("Wireplumb set successfully.")
-#     else:
-#         print("Failed to set wireplumb.")
+if connect_result == "Success":
+    print("Device connected successfully, getting wireplumb ID.")
+    get_wireplumb_id_result = get_wireplumb_id(quick_check_result[1][0]['device_name'])  # Get wireplumb ID for the first paired device
+    if get_wireplumb_id_result == "Fail":
+        print("Failed to get wireplumb ID.")
+        logging.error("Failed to get wireplumb ID.")
+        exit(1)
+    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result)  # Set wireplumb for the first paired device
+    if set_wireplumb_result == "Success":
+        print("Wireplumb set successfully.")
+        exit(0)
+    else:
+        print("Failed to set wireplumb.")
+        logging.error("Failed to set wireplumb.")
+        exit(1)
 
-# if connect_result == "Fail":
-#     print("Failed to connect to the device after multiple attempts.")
-#     logging.error("Failed to connect to the device after multiple attempts.")
-#     exit(1)
+if connect_result == "Fail":
+    print("Failed to connect to the device after multiple attempts.")
+    logging.error("Failed to connect to the device after multiple attempts.")
+    exit(1)
 
 # --------------------------------------------------------------------#
