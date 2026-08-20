@@ -14,6 +14,7 @@ logging.basicConfig(
 
 
 bt_connect_max_retries = 3
+wpctl_set_max_retries = 3
 
 connected_list = []
 device_info_list = []
@@ -153,20 +154,21 @@ elif quick_check_result[0] == "No connection":
             break
         time.sleep(2)
         bt_connect_max_retries -= 1
-#-------------------------------------------------------------#
-# Need to loop all connected devices. One could be a gamepad.
-# If gamepad, ID obtain could fail due to it not being in wireplumb.
-#
-elif quick_check_result[0] == "Wireplumb not set": # Probably need to loop and retry?
+
+elif quick_check_result[0] == "Wireplumb not set":
     print("Device is connected but wireplumb is not set, attempting to set wireplumb.")
-    get_wireplumb_id_result = get_wireplumb_id(quick_check_result[1][0])  # Get wireplumb ID for the first paired device
-    if get_wireplumb_id_result == "Fail":
-        print("Failed to get wireplumb ID.")
-        logging.error("Failed to get wireplumb ID.")
-        exit(1)
-    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result)  # Set wireplumb for the first paired device
+    while wpctl_set_max_retries > 0:
+        for device in quick_check_result[1]:
+            get_wireplumb_id_result = get_wireplumb_id(device)
+            if get_wireplumb_id_result != "Fail":
+                break
+        if get_wireplumb_id_result != "Fail":
+            break
+        time.sleep(2)
+        wpctl_set_max_retries -= 1
+    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result)
     if set_wireplumb_result == "Success":
-        print(f"Wireplumb set successfully for device {quick_check_result[1][0]}.")
+        print(f"Wireplumb set successfully for device {device}.")
         exit(0)
     else:
         print("Failed to set wireplumb.")
@@ -175,12 +177,12 @@ elif quick_check_result[0] == "Wireplumb not set": # Probably need to loop and r
 
 if connect_result == "Success":
     print("Device connected successfully, getting wireplumb ID.")
-    get_wireplumb_id_result = get_wireplumb_id(connected_device_name)  # Get wireplumb ID for the first paired device
+    get_wireplumb_id_result = get_wireplumb_id(connected_device_name)
     if get_wireplumb_id_result == "Fail":
         print("Failed to get wireplumb ID.")
         logging.error("Failed to get wireplumb ID.")
         exit(1)
-    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result)  # Set wireplumb for the first paired device
+    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result)
     if set_wireplumb_result == "Success":
         print("Wireplumb set successfully.")
         exit(0)
