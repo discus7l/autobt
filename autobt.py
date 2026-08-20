@@ -143,12 +143,20 @@ if quick_check_result[0] == 0:
 elif quick_check_result[0] == "No connection":
     print("Device is paired but not connected, attempting to connect.")
     while bt_connect_max_retries > 0:
-        connect_result = connect_bt(quick_check_result[1][0]['mac_address'])  # Connect to the first paired device
+        for device in quick_check_result[1]:
+            connect_result = connect_bt(device['mac_address'])  # Connect to each paired device
+            if connect_result == "Success":
+                connected_device_name = device['device_name']
+                print(f"Connected to device {connected_device_name}.")
+                break
         if connect_result == "Success":
             break
         time.sleep(2)
         bt_connect_max_retries -= 1
-
+#-------------------------------------------------------------#
+# Need to loop all connected devices. One could be a gamepad.
+# If gamepad, ID obtain could fail due to it not being in wireplumb.
+#
 elif quick_check_result[0] == "Wireplumb not set": # Probably need to loop and retry?
     print("Device is connected but wireplumb is not set, attempting to set wireplumb.")
     get_wireplumb_id_result = get_wireplumb_id(quick_check_result[1][0])  # Get wireplumb ID for the first paired device
@@ -167,7 +175,7 @@ elif quick_check_result[0] == "Wireplumb not set": # Probably need to loop and r
 
 if connect_result == "Success":
     print("Device connected successfully, getting wireplumb ID.")
-    get_wireplumb_id_result = get_wireplumb_id(quick_check_result[1][0]['device_name'])  # Get wireplumb ID for the first paired device
+    get_wireplumb_id_result = get_wireplumb_id(connected_device_name)  # Get wireplumb ID for the first paired device
     if get_wireplumb_id_result == "Fail":
         print("Failed to get wireplumb ID.")
         logging.error("Failed to get wireplumb ID.")
