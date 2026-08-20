@@ -1,10 +1,17 @@
-from asyncio import sleep
+#!/usr/bin/env python3
+
+import time
 import re
 import subprocess
 import logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='autobt.log', encoding='utf-8', level=logging.ERROR)
+logging.basicConfig(
+    filename='/mnt/mmc/MUOS/application/autobt.log',
+    encoding='utf-8',
+    level=logging.INFO
+    )
+
 
 bt_connect_max_retries = 3
 
@@ -64,9 +71,18 @@ def quick_check():
 
     # Check wireplumb status
     print(f'Connected devices: {connected_list}') # Names only
+    shell_command = [f'wpctl status | grep \*']
+    try:
+        wireplumb_output = subprocess.check_output(shell_command, shell=True).decode()
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error checking wireplumb status: {e.output.decode()}")
+        return "Fail", None
 
-    attachment = None
-    return 0, attachment  # Return 0 if device is connected and wireplumb is set
+    for i in connected_list:
+        if i in wireplumb_output:
+            print(f"Device {i} is connected and wireplumb is set.")
+            return 0, None
+    return "Wireplumb not set", connected_list
 
 # Attempt to connect to paired device using bluetoothctl
 def connect_bt(mac_address):
@@ -90,30 +106,64 @@ def get_wireplumb_id(device_name):
     id = match.group(1)
     return id
 
-# Set wireplumb
+# Set wireplumb, and write the ID to /run/muos/audio/nid_internal, and un-mute
 def set_wireplumb(id):
     try:
         subprocess.check_output(["wpctl", "set-default", id])
     except subprocess.CalledProcessError as e:
         logging.error(f"Error setting wireplumb: {e.output.decode()}")
         return "Fail"
+
+    shell_command = [f'echo "{id}" > "/run/muos/audio/nid_internal"']
+    try:
+        subprocess.check_output(shell_command, shell=True)
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error writing wireplumb ID to file: {e.output.decode()}")
+        return "Fail"
+
+    shell_command = [f'wpctl set-mute {id} 0']
+    try:
+        subprocess.check_output(shell_command, shell=True)
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error setting mute status: {e.output.decode()}")
+        return "Fail"
     return "Success"
 
 
 # --------------------------------------------------------------------#
 # Check device status, connect if necessary, and set wireplumb
+logging.info("Starting autobt script.")
+time.sleep(10)  # Wait for system to initialize
+
 quick_check_result = quick_check()
 if quick_check_result[0] == 0:
     print("Device is already connected and wireplumb is set.")
     exit(0)
+
 elif quick_check_result[0] == "No connection":
     print("Device is paired but not connected, attempting to connect.")
     while bt_connect_max_retries > 0:
         connect_result = connect_bt(quick_check_result[1][0]['mac_address'])  # Connect to the first paired device
         if connect_result == "Success":
             break
-        sleep(2)
+        time.sleep(2)
         bt_connect_max_retries -= 1
+
+elif quick_check_result[0] == "Wireplumb not set": # Probably need to loop and retry?
+    print("Device is connected but wireplumb is not set, attempting to set wireplumb.")
+    get_wireplumb_id_result = get_wireplumb_id(quick_check_result[1][0])  # Get wireplumb ID for the first paired device
+    if get_wireplumb_id_result == "Fail":
+        print("Failed to get wireplumb ID.")
+        logging.error("Failed to get wireplumb ID.")
+        exit(1)
+    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result)  # Set wireplumb for the first paired device
+    if set_wireplumb_result == "Success":
+        print(f"Wireplumb set successfully for device {quick_check_result[1][0]}.")
+        exit(0)
+    else:
+        print("Failed to set wireplumb.")
+        logging.error("Failed to set wireplumb.")
+        exit(1)
 
 if connect_result == "Success":
     print("Device connected successfully, getting wireplumb ID.")
