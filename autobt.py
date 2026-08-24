@@ -4,6 +4,10 @@ import time
 import re
 import subprocess
 import logging
+import configparser
+
+config = configparser.ConfigParser()
+config.read('/mnt/mmc/MUOS/application/autobt_conf.ini')
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -13,8 +17,13 @@ logging.basicConfig(
     )
 
 
-bt_connect_max_retries = 3
-wpctl_set_max_retries = 3
+bt_connect_max_retries = int(config.get('DEFAULT', 'bt_connect_max_retries'))
+wpctl_set_max_retries = int(config.get('DEFAULT', 'wpctl_set_max_retries'))
+boot_delay = int(config.get('DEFAULT', 'boot_delay'))
+print(f"bt_connect_max_retries: {bt_connect_max_retries}")
+print(f"wpctl_set_max_retries: {wpctl_set_max_retries}")
+print(f"boot_delay: {boot_delay}")
+
 
 connected_list = []
 device_info_list = []
@@ -134,7 +143,7 @@ def set_wireplumb(id):
 # --------------------------------------------------------------------#
 # Check device status, connect if necessary, and set wireplumb
 logging.info("Starting autobt script.")
-time.sleep(10)  # Wait for system to initialize
+time.sleep(boot_delay)  # Wait for system to initialize
 
 quick_check_result = quick_check()
 if quick_check_result[0] == 0:
