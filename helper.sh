@@ -1,14 +1,14 @@
 #!/bin/sh
 
-LOCAL_FILE="/home/yk/Documents/github/autobt/autobt/autobt.py"
-LOCAL_START_FILE="/home/yk/Documents/github/autobt/autobt/start-autobt.sh"
-LOCAL_CONF_FILE="/home/yk/Documents/github/autobt/autobt/autobt_conf.ini"
+LOCAL_FILE="/home/yk/Documents/github/autobt/autobt.py"
+LOCAL_START_FILE="/home/yk/Documents/github/autobt/start-autobt.sh"
+LOCAL_CONF_FILE="/home/yk/Documents/github/autobt/autobt_conf.ini"
 
 REMOTE_FILE="/mnt/mmc/MUOS/application/autobt.py"
 REMOTE_START_FILE="/mnt/mmc/MUOS/init/start-autobt.sh"
 REMOTE_CONF_FILE="/mnt/mmc/MUOS/application/autobt_conf.ini"
 
-REMOTE_HOST="192.168.10.9"
+REMOTE_HOST="172.20.10.9"
 
 # Copy local file
 scp $LOCAL_FILE root@$REMOTE_HOST:$REMOTE_FILE
