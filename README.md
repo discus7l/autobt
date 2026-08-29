@@ -14,12 +14,13 @@ Boot → Bluetooth connects → AutoBT selects it → Start gaming. 🎮
 A muOS device
 Bluetooth audio device
 Bluetooth device already paired with your handheld
+(use Bluetooth app https://github.com/nvcuong1312/bltMuos to pair)
 
-Tested with muOS AW Banana on rg35xxsp. No other muOS versions or devices have been tested. Use at your own risk.
+Tested with muOS AW Banana on rg35xxsp. No other muOS versions or devices have been tested so far. Use at your own risk.
 
 📥 Installation
 
-Download autobt_vX.X.X.zip, extract the following three files:
+Download autobt_vX.X.X.zip from the releases, extract the following three files:
 
 autobt.py
 autobt_conf.ini
@@ -60,12 +61,12 @@ If something isn't working, this is the first place to look.
 
 ⚙️ Configuration
 
-The script currently waits for a Bluetooth audio device for a limited amount of time during startup.
+The script currently waits for a Bluetooth audio device for a limited amount of time during startup. This is to minimize workload during gameplay.
 
 Advanced users can edit autobt_conf.ini to change the behavior.
 
 🛠️ Troubleshooting
-Bluetooth connects but audio stays on the speakers
+Bluetooth connects but audio stays on the built-in speakers
 
 Check the PipeWire audio sinks:
 
