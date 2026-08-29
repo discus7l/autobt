@@ -11,6 +11,7 @@ Instead of manually selecting your Bluetooth headphones every time you boot, Aut
 Boot → Bluetooth connects → AutoBT selects it → Start gaming. 🎮
 
 📋 Requirements
+
 A muOS device
 Bluetooth audio device
 Bluetooth device already paired with your handheld
@@ -70,6 +71,7 @@ Advanced users can edit autobt_conf.ini to change the behavior.
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/yu2kataoka)
 
 🛠️ Troubleshooting
+
 Bluetooth connects but audio stays on the built-in speakers
 
 Check the PipeWire audio sinks:
