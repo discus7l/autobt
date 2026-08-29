@@ -65,6 +65,9 @@ The script currently waits for a Bluetooth audio device for a limited amount of 
 
 Advanced users can edit autobt_conf.ini to change the behavior.
 
+💖 Support Dev
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/yu2kataoka)
+
 🛠️ Troubleshooting
 Bluetooth connects but audio stays on the built-in speakers
 
