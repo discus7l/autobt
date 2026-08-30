@@ -36,6 +36,8 @@ autobt_conf.ini
 start-autobt.sh
         → /mnt/mmc/MUOS/init/
 
+Enable 'User Init Scripts' under General Settings -> Advances Settings
+
 That's it.
 
 Reboot your handheld and AutoBT will start automatically.
@@ -65,6 +67,8 @@ If something isn't working, this is the first place to look.
 The script currently waits for a Bluetooth audio device for a limited amount of time during startup. This is to minimize workload during gameplay.
 
 Advanced users can edit autobt_conf.ini to change the behavior.
+
+Volume adjustment can be achieved here aswell. Values should be assigned with numbers between 0.1 to 1.0. 100% is 1.0, and 50% is 0.5, and so on and so forth.
 
 💖 Support Dev
 

@@ -1,4 +1,4 @@
 -log wrapping       [done]
 -adjust delay       [done]
--set initial volume
+-set initial volume [done]
 -prepare installer  [done]

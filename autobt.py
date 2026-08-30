@@ -27,6 +27,7 @@ config.read('/mnt/mmc/MUOS/application/autobt_conf.ini')
 bt_connect_max_retries = int(config.get('DEFAULT', 'bt_connect_max_retries'))
 wpctl_set_max_retries = int(config.get('DEFAULT', 'wpctl_set_max_retries'))
 boot_delay = int(config.get('DEFAULT', 'boot_delay'))
+volume = str(config.get('DEFAULT', 'volume'))
 
 connected_list = []
 device_info_list = []
@@ -116,14 +117,20 @@ def get_wireplumb_id(device_name):
     id = match.group(1)
     return id
 
-# Set wireplumb, and write the ID to /run/muos/audio/nid_internal, and un-mute
-def set_wireplumb(id):
+# Set wireplumb, set volume, write the ID to /run/muos/audio/nid_internal, and un-mute
+def set_wireplumb(id, volume):
     try:
         subprocess.check_output(["wpctl", "set-default", id])
     except subprocess.CalledProcessError as e:
         logger.error(f"Error setting wireplumb: {e.output.decode()}")
         return "Fail"
 
+    try:
+        subprocess.check_output(["wpctl", "set-volume", id, volume])
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error setting volume: {e.output.decode()}")
+        return "Fail"
+    
     shell_command = [f'echo "{id}" > "/run/muos/audio/nid_internal"']
     try:
         subprocess.check_output(shell_command, shell=True)
@@ -175,7 +182,7 @@ elif quick_check_result[0] == "Wireplumb not set":
             break
         time.sleep(2)
         wpctl_set_max_retries -= 1
-    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result)
+    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result, volume)
     if set_wireplumb_result == "Success":
         logger.info(f"Wireplumb set successfully for device {device}.")
         exit(0)
@@ -189,7 +196,7 @@ if connect_result == "Success":
     if get_wireplumb_id_result == "Fail":
         logger.error("Failed to get wireplumb ID.")
         exit(1)
-    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result)
+    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result, volume)
     if set_wireplumb_result == "Success":
         logger.info("Wireplumb set successfully.")
         exit(0)
