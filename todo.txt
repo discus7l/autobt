@@ -2,3 +2,4 @@
 -adjust delay       [done]
 -set initial volume [done]
 -prepare installer  [done]
+-check bluetoothctl

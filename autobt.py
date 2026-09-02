@@ -34,11 +34,19 @@ device_info_list = []
 device_info_dict = {}
 
 # Check for paired and connected devices
-def quick_check():
+def quick_check(bt_connect_max_retries):
     # Look for paired devices using bluetoothctl
     # terminate if none are found
     # return a dictionary of device names and MAC addresses if found
-    paired_check_result = subprocess.run(["bluetoothctl", "devices", "Paired"], stdout=subprocess.PIPE)
+    while bt_connect_max_retries > 0:
+        try:
+            paired_check_result = subprocess.run(["bluetoothctl", "devices", "Paired"], stdout=subprocess.PIPE)
+            logger.info('Successfully executed paired devices check.')
+            break
+        except:
+            logger.error("Error checking paired devices, retrying...")
+            bt_connect_max_retries -= 1
+            time.sleep(1)
 
     if paired_check_result.stdout.decode().strip() == '':
         print("No paired devices found.")
@@ -115,7 +123,7 @@ def get_wireplumb_id(device_name):
     logger.info(f"Wireplumb output: \n{wireplumb_output}")
     match = re.search(r'(\d+)', wireplumb_output)
     id = match.group(1)
-    return id
+    return "Success", id
 
 # Set wireplumb, set volume, write the ID to /run/muos/audio/nid_internal, and un-mute
 def set_wireplumb(id, volume):
@@ -131,19 +139,19 @@ def set_wireplumb(id, volume):
         logger.error(f"Error setting volume: {e.output.decode()}")
         return "Fail"
     
-    shell_command = [f'echo "{id}" > "/run/muos/audio/nid_internal"']
-    try:
-        subprocess.check_output(shell_command, shell=True)
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error writing wireplumb ID to file: {e.output.decode()}")
-        return "Fail"
+    # shell_command = [f'echo "{id}" > "/run/muos/audio/nid_internal"']
+    # try:
+    #     subprocess.check_output(shell_command, shell=True)
+    # except subprocess.CalledProcessError as e:
+    #     logger.error(f"Error writing wireplumb ID to file: {e.output.decode()}")
+    #     return "Fail"
 
-    shell_command = [f'wpctl set-mute {id} 0']
-    try:
-        subprocess.check_output(shell_command, shell=True)
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error setting mute status: {e.output.decode()}")
-        return "Fail"
+    # shell_command = [f'wpctl set-mute {id} 0']
+    # try:
+    #     subprocess.check_output(shell_command, shell=True)
+    # except subprocess.CalledProcessError as e:
+    #     logger.error(f"Error setting mute status: {e.output.decode()}")
+    #     return "Fail"
     return "Success"
 
 
@@ -152,7 +160,7 @@ def set_wireplumb(id, volume):
 logger.info("Starting autobt script.")
 time.sleep(boot_delay)  # Wait for system to initialize
 
-quick_check_result = quick_check()
+quick_check_result = quick_check(bt_connect_max_retries)
 if quick_check_result[0] == 0:
     logger.info("Device is already connected and wireplumb is set.")
     exit(0)
@@ -176,13 +184,13 @@ elif quick_check_result[0] == "Wireplumb not set":
     while wpctl_set_max_retries > 0:
         for device in quick_check_result[1]:
             get_wireplumb_id_result = get_wireplumb_id(device)
-            if get_wireplumb_id_result != "Fail":
+            if get_wireplumb_id_result[0] == "Success":
                 break
-        if get_wireplumb_id_result != "Fail":
+        if get_wireplumb_id_result[0] == "Success":
             break
-        time.sleep(2)
+        time.sleep(1)
         wpctl_set_max_retries -= 1
-    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result, volume)
+    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result[1], volume)
     if set_wireplumb_result == "Success":
         logger.info(f"Wireplumb set successfully for device {device}.")
         exit(0)
@@ -192,11 +200,15 @@ elif quick_check_result[0] == "Wireplumb not set":
 
 if connect_result == "Success":
     logger.info("Device connected successfully, getting wireplumb ID.")
-    get_wireplumb_id_result = get_wireplumb_id(connected_device_name)
-    if get_wireplumb_id_result == "Fail":
-        logger.error("Failed to get wireplumb ID.")
-        exit(1)
-    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result, volume)
+
+    while wpctl_set_max_retries > 0:
+        get_wireplumb_id_result = get_wireplumb_id(connected_device_name)
+        if get_wireplumb_id_result[0] == "Success":
+            break
+        time.sleep(1)
+        wpctl_set_max_retries -= 1
+
+    set_wireplumb_result = set_wireplumb(get_wireplumb_id_result[1], volume)
     if set_wireplumb_result == "Success":
         logger.info("Wireplumb set successfully.")
         exit(0)

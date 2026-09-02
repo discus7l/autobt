@@ -8,11 +8,11 @@ REMOTE_FILE="/mnt/mmc/MUOS/application/autobt.py"
 REMOTE_START_FILE="/mnt/mmc/MUOS/init/start-autobt.sh"
 REMOTE_CONF_FILE="/mnt/mmc/MUOS/application/autobt_conf.ini"
 
-REMOTE_HOST="192.168.10.9"
+REMOTE_HOST="192.168.10.10"
 
 # Copy local file
 scp $LOCAL_FILE root@$REMOTE_HOST:$REMOTE_FILE
-scp $LOCAL_START_FILE root@$REMOTE_HOST:$REMOTE_START_FILE
+# scp $LOCAL_START_FILE root@$REMOTE_HOST:$REMOTE_START_FILE
 scp $LOCAL_CONF_FILE root@$REMOTE_HOST:$REMOTE_CONF_FILE
 echo "Files copied to remote host..."
 
