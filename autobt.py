@@ -6,6 +6,7 @@ import subprocess
 import logging
 import configparser
 
+from subprocess import Popen, PIPE, TimeoutExpired
 from logging.handlers import RotatingFileHandler
 
 # Set up logging
@@ -32,6 +33,27 @@ volume = str(config.get('DEFAULT', 'volume'))
 connected_list = []
 device_info_list = []
 device_info_dict = {}
+
+# Check if bluetoothctl is frozen
+def freeze_check():
+    counter = 0
+    while counter < 3:
+        proc = Popen(
+            ["bluetoothctl", "show"],
+            stdout=PIPE,
+            stderr=PIPE,
+            text=True
+        )
+
+        try:
+            outs, errs = proc.communicate(timeout=2)
+            return 0
+        except TimeoutExpired:
+            counter += 1
+            logger.error("bluetoothctl is frozen, killing the process and retrying.")
+            proc.kill()
+            outs, errs = proc.communicate()
+        return 1
 
 # Check for paired and connected devices
 def quick_check(bt_connect_max_retries):
@@ -127,18 +149,21 @@ def get_wireplumb_id(device_name):
 
 # Set wireplumb, set volume, write the ID to /run/muos/audio/nid_internal, and un-mute
 def set_wireplumb(id, volume):
-    try:
-        subprocess.check_output(["wpctl", "set-default", id])
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error setting wireplumb: {e.output.decode()}")
-        return "Fail"
 
     try:
         subprocess.check_output(["wpctl", "set-volume", id, volume])
     except subprocess.CalledProcessError as e:
         logger.error(f"Error setting volume: {e.output.decode()}")
         return "Fail"
-    
+
+    time.sleep(1)  # Wait for volume to be set before setting default
+
+    try:
+        subprocess.check_output(["wpctl", "set-default", id])
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error setting wireplumb: {e.output.decode()}")
+        return "Fail"
+   
     # shell_command = [f'echo "{id}" > "/run/muos/audio/nid_internal"']
     # try:
     #     subprocess.check_output(shell_command, shell=True)
@@ -159,6 +184,12 @@ def set_wireplumb(id, volume):
 # Check device status, connect if necessary, and set wireplumb
 logger.info("Starting autobt script.")
 time.sleep(boot_delay)  # Wait for system to initialize
+
+# Check if bluetoothctl is frozen
+freeze_check_result = freeze_check()
+if freeze_check_result == 1:
+    logger.error("bluetoothctl is frozen, exiting script.")
+    exit(1)
 
 quick_check_result = quick_check(bt_connect_max_retries)
 if quick_check_result[0] == 0:

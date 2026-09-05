@@ -13,10 +13,10 @@ REMOTE_TEST_FILE="/mnt/mmc/MUOS/application/test.py"
 REMOTE_HOST="192.168.10.5"
 
 # Copy local file
-# scp $LOCAL_FILE root@$REMOTE_HOST:$REMOTE_FILE
+scp $LOCAL_FILE root@$REMOTE_HOST:$REMOTE_FILE
 # scp $LOCAL_START_FILE root@$REMOTE_HOST:$REMOTE_START_FILE
 # scp $LOCAL_TEST_FILE root@$REMOTE_HOST:$REMOTE_TEST_FILE
-scp $LOCAL_CONF_FILE root@$REMOTE_HOST:$REMOTE_CONF_FILE
+# scp $LOCAL_CONF_FILE root@$REMOTE_HOST:$REMOTE_CONF_FILE
 echo "Files copied to remote host..."
 
 #  Set permissions on the remote host
