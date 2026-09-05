@@ -1,22 +1,29 @@
 #!/bin/sh
 
-LOCAL_FILE="/home/yk/Documents/github/autobt/autobt.py"
-LOCAL_START_FILE="/home/yk/Documents/github/autobt/start-autobt.sh"
-LOCAL_CONF_FILE="/home/yk/Documents/github/autobt/autobt_conf.ini"
-LOCAL_TEST_FILE="/home/yk/Documents/github/autobt/test.py"
+# LOCAL_FILE="/home/yk/Documents/github/autobt/autobt.py"
+# LOCAL_START_FILE="/home/yk/Documents/github/autobt/start-autobt.sh"
+# LOCAL_CONF_FILE="/home/yk/Documents/github/autobt/autobt_conf.ini"
 
-REMOTE_FILE="/mnt/mmc/MUOS/application/autobt.py"
-REMOTE_START_FILE="/mnt/mmc/MUOS/init/start-autobt.sh"
-REMOTE_CONF_FILE="/mnt/mmc/MUOS/application/autobt_conf.ini"
-REMOTE_TEST_FILE="/mnt/mmc/MUOS/application/test.py"
+# REMOTE_FILE="/mnt/mmc/MUOS/application/autobt.py"
+# REMOTE_START_FILE="/mnt/mmc/MUOS/init/start-autobt.sh"
+# REMOTE_CONF_FILE="/mnt/mmc/MUOS/application/autobt_conf.ini"
 
-REMOTE_HOST="192.168.10.5"
+#------------------------  BANANA -----------------------------------------------
+LOCAL_FILE="/home/yk/Documents/github/autobt/autobt_banana.py"
+LOCAL_START_FILE="/home/yk/Documents/github/autobt/start-autobt_banana.sh"
+LOCAL_CONF_FILE="/home/yk/Documents/github/autobt/autobt_conf_banana.ini"
+
+REMOTE_FILE="/mnt/mmc/MUOS/application/autobt_banana.py"
+REMOTE_START_FILE="/mnt/mmc/MUOS/init/start-autobt_banana.sh"
+REMOTE_CONF_FILE="/mnt/mmc/MUOS/application/autobt_conf_banana.ini"
+#------------------------  BANANA -----------------------------------------------
+
+REMOTE_HOST="192.168.10.12"
 
 # Copy local file
 scp $LOCAL_FILE root@$REMOTE_HOST:$REMOTE_FILE
-# scp $LOCAL_START_FILE root@$REMOTE_HOST:$REMOTE_START_FILE
-# scp $LOCAL_TEST_FILE root@$REMOTE_HOST:$REMOTE_TEST_FILE
-# scp $LOCAL_CONF_FILE root@$REMOTE_HOST:$REMOTE_CONF_FILE
+scp $LOCAL_START_FILE root@$REMOTE_HOST:$REMOTE_START_FILE
+scp $LOCAL_CONF_FILE root@$REMOTE_HOST:$REMOTE_CONF_FILE
 echo "Files copied to remote host..."
 
 #  Set permissions on the remote host
